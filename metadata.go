@@ -78,11 +78,19 @@ func loadMetadata(name string) (pubmeta *epub.Metadata, err error) {
 			Refines:  "#collection",
 			Property: "title-type",
 			Value:    "collection",
+		}, &epub.Meta{
+			ID:       "collectionid",
+			Property: "belongs-to-collection",
+			Value:    collection,
 		})
 		// Добавляем порядковый номер в коллекции, если он есть
 		if collectionNumber := meta.Get("sequence"); collectionNumber != "" {
 			pubmeta.Meta = append(pubmeta.Meta, &epub.Meta{
 				Refines:  "#collection",
+				Property: "group-position",
+				Value:    collectionNumber,
+			}, &epub.Meta{
+				Refines:  "#collectionid",
 				Property: "group-position",
 				Value:    collectionNumber,
 			})
@@ -101,7 +109,16 @@ func loadMetadata(name string) (pubmeta *epub.Metadata, err error) {
 		})
 		fmt.Fprintf(tab, "Edition:\t%s\n", edition)
 	}
-	// TODO: Добавить полный заголовок книги, с учетом всего вышеизложенного
+	// Добавляем расширенное название публикации, если оно есть
+	if fulltitle := meta.Get("fulltitle"); fulltitle != "" {
+		pubmeta.Title.Add("fulltitle", fulltitle)
+		pubmeta.Meta = append(pubmeta.Meta, &epub.Meta{
+			Refines:  "#fulltitle",
+			Property: "title-type",
+			Value:    "expanded",
+		})
+		fmt.Fprintf(tab, "Full title:\t%s\n", fulltitle)
+	}
 	// Добавляем авторов
 	for i, author := range meta.Authors() {
 		pubmeta.Creator.Add("", author)
@@ -132,15 +149,12 @@ func loadMetadata(name string) (pubmeta *epub.Metadata, err error) {
 	// Добавляем уникальные идентификаторы
 	for _, name := range []string{"uuid", "id", "identifier", "doi", "isbn", "issn"} {
 		if value := meta.Get(name); value != "" {
-			var prefix string
 			switch name {
-			case "uuid":
-				prefix = "urn:uuid:"
-			case "doi":
-				prefix = "urn:-doi:"
+			case "uuid", "doi", "isbn", "issn":
+				value = "urn:" + name + ":" + value
 				// TODO: Добавить префиксы для других идентификаторов
 			}
-			pubmeta.Identifier.Add(name, prefix+value)
+			pubmeta.Identifier.Add(name, value)
 			fmt.Fprintf(tab, "%s:\t%s\n", strings.ToUpper(name), value)
 		}
 	}
