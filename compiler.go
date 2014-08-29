@@ -96,9 +96,15 @@ func compiler(sourcePath, outputFilename string) error {
 			data = blackfriday.Markdown(data, mdRender, markdown.Extensions)
 			// Изменяем расширение имени файла на .xhtml
 			filename = filename[:len(filename)-len(filepath.Ext(filename))] + ".xhtml"
-			// Добавляем в основной список чтения, если имя файла не начинается с подчеркивания
-			spine := filepath.Base(filename)[0] != '_'
-			fileWriter, err := writer.Add(filename, spine)
+			// Вычисляем, основной это текст или скрытый
+			var ct epub.ContentType
+			if meta.GetBool("hidden") {
+				ct = epub.ContentTypeAuxiliary
+			} else {
+				ct = epub.ContentTypePrimary
+			}
+			// Получает io.Writer для записи содержимого файла
+			fileWriter, err := writer.Add(filename, ct)
 			if err != nil {
 				return err
 			}
@@ -111,10 +117,10 @@ func compiler(sourcePath, outputFilename string) error {
 			}
 			// Добавляем информацию о файле в оглавление
 			nav = append(nav, &NavigationItem{
-				Title:    title,
-				Subtitle: meta.Subtitle(),
-				Filename: filename,
-				Spine:    spine,
+				Title:       title,
+				Subtitle:    meta.Subtitle(),
+				Filename:    filename,
+				ContentType: ct,
 			})
 			log.Printf("Add %s %q", filename, title)
 
@@ -132,7 +138,7 @@ func compiler(sourcePath, outputFilename string) error {
 				properties = []string{"cover-image"}
 				setCover = true
 			}
-			if err := writer.AddFile(filename, filename, false, properties...); err != nil {
+			if err := writer.AddFile(filename, filename, epub.ContentTypeMedia, properties...); err != nil {
 				return err
 			}
 			if properties != nil {
@@ -153,8 +159,8 @@ func compiler(sourcePath, outputFilename string) error {
 	if err := filepath.Walk(".", walkFn); err != nil {
 		return err
 	}
-	// Добавляем оглавление
-	fileWriter, err := writer.Add("toc.xhtml", false, "nav")
+	// Добавляем оглавление как скрытый (вспомогательный) файл
+	fileWriter, err := writer.Add("toc.xhtml", epub.ContentTypeAuxiliary, "nav")
 	if err != nil {
 		return err
 	}
