@@ -75,14 +75,12 @@ func compiler(sourcePath, outputFilename string) error {
 		if finfo.IsDir() {
 			// Полностью игнорируем каталоги, имя которых начинается с точки
 			if filepath.Base(filename)[0] == '.' {
-				log.Printf("Ignore folder %s", filename)
 				return filepath.SkipDir
 			}
 			return nil
 		}
 		// Игнорируем файлы, именя которых начинаются с точки
 		if filepath.Base(filename)[0] == '.' {
-			log.Printf("Ignore %s", filename)
 			return nil
 		}
 		// Обрабатываем файлы в зависимости от расширения
