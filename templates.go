@@ -9,7 +9,8 @@ var templates = template.Must(template.New("").Parse(`
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="{{ if .lang }}{{ .lang }}{{ else }}en{{ end }}">
 <head>
 <meta charset="UTF-8" />
-<title>{{ .title }}</title>
+<title>{{ .title }}</title>{{ if ._globalcssfile_ }}
+<link rel="stylesheet" href="{{ ._globalcssfile_ }}" />{{ end }}
 </head>
 <body>{{ end }}
 
