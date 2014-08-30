@@ -125,7 +125,11 @@ func compiler(sourcePath, outputFilename string) error {
 			}
 			// Добавляем глобальный стилевой файл публикации
 			if cssfile != "" {
-				meta["_globalcssfile_"] = cssfile
+				rel, err := filepath.Rel(filepath.Dir(filename), cssfile)
+				if err != nil {
+					return err
+				}
+				meta["_globalcssfile_"] = filepath.ToSlash(rel)
 			}
 			// Преобразуем из Markdown в HTML
 			data = Markdown(data)
