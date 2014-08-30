@@ -5,7 +5,6 @@ import (
 	"code.google.com/p/go.net/html"
 	"fmt"
 	"github.com/russross/blackfriday"
-	"hash/crc64"
 )
 
 var (
@@ -72,20 +71,4 @@ func (_ *htmlRender) NormalText(out *bytes.Buffer, text []byte) {
 	// if mark < len(text) {
 	// 	out.Write(text[mark:])
 	// }
-}
-
-const dictionary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_$"
-
-var hash = crc64.New(crc64.MakeTable(crc64.ECMA))
-
-func hashSlug(name []byte) []byte {
-	hash.Reset()
-	hash.Write([]byte(name))
-	val := hash.Sum64()
-	var a = make([]byte, 8)
-	for i := 0; i < 8; i++ {
-		a[i] = dictionary[val&63]
-		val >>= 8
-	}
-	return a
 }
