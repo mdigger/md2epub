@@ -2,20 +2,16 @@ package main
 
 import (
 	"github.com/mdigger/epub3"
-	"html/template"
 )
 
+// NavigationItem описывает ссылку из оглавления на файл
 type NavigationItem struct {
-	Title       string
-	Subtitle    string
-	Filename    string
-	ContentType epub.ContentType
+	Title       string           // Заголовок
+	Subtitle    string           // Подзаголовок
+	Level       int              // Уровень заголовка
+	Filename    string           // Имя файла
+	ContentType epub.ContentType // Тип файла
 }
 
+// Navigaton описывает оглавление публикации
 type Navigaton []*NavigationItem
-
-type TOCItem struct {
-	ID    string
-	Text  template.HTML
-	Level int
-}

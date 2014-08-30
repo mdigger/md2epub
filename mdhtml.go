@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/russross/blackfriday"
 	"hash/crc64"
-	"html/template"
 )
 
 var (
@@ -29,14 +28,11 @@ var (
 func Markdown(data []byte) []byte {
 	return blackfriday.Markdown(data, &htmlRender{
 		Renderer: blackfriday.HtmlRenderer(htmlFlags, "", ""),
-		TOC:      make([]*TOCItem, 0),
 	}, extensions)
 }
 
 type htmlRender struct {
 	blackfriday.Renderer
-	headerCount uint
-	TOC         []*TOCItem
 }
 
 func (_ *htmlRender) FootnoteRef(out *bytes.Buffer, ref []byte, id int) {
@@ -76,30 +72,6 @@ func (_ *htmlRender) NormalText(out *bytes.Buffer, text []byte) {
 	// if mark < len(text) {
 	// 	out.Write(text[mark:])
 	// }
-}
-
-func (r *htmlRender) Header(out *bytes.Buffer, text func() bool, level int, id string) {
-	marker := out.Len()
-	if out.Len() > 0 {
-		out.WriteByte('\n')
-	}
-	if id == "" {
-		r.headerCount++
-		id = fmt.Sprintf("toc%02d", r.headerCount)
-	}
-	out.WriteString(fmt.Sprintf("<h%d id=\"%s\">", level, id))
-	tocMarker := out.Len()
-	if !text() {
-		out.Truncate(marker)
-		return
-	}
-	out.WriteString(fmt.Sprintf("</h%d>\n", level))
-	tocItem := &TOCItem{
-		ID:    id,
-		Text:  template.HTML(out.Bytes()[tocMarker:]),
-		Level: level,
-	}
-	r.TOC = append(r.TOC, tocItem)
 }
 
 const dictionary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_$"
