@@ -19,6 +19,7 @@ import (
 var (
 	metadataFiles = []string{"metadata.yaml", "metadata.yml", "metadata.json"}
 	coverFiles    = []string{"cover.png", "cover.svg", "cover.jpeg", "cover.jpg", "cover.gif"}
+	globalCSSFile = "global.css"
 )
 
 // Для отслеживания пустых строк между тегами.
@@ -58,6 +59,11 @@ func compiler(sourcePath, outputFilename string) error {
 	}
 	// Вытаскиваем язык публикации
 	publang := pubMetadata.Language[0].Value
+	// Ищем файл с глобальными стилями
+	var cssfile string
+	if _, err := os.Stat(globalCSSFile); err == nil {
+		cssfile = globalCSSFile
+	}
 	// Создаем упаковщик в формат EPUB
 	writer, err := epub.Create(filepath.Join(currentPath, outputFilename))
 	if err != nil {
@@ -115,6 +121,10 @@ func compiler(sourcePath, outputFilename string) error {
 				ct = epub.ContentTypeAuxiliary
 			} else {
 				ct = epub.ContentTypePrimary
+			}
+			// Добавляем глобальный стилевой файл публикации
+			if cssfile != "" {
+				meta["_globalcssfile_"] = cssfile
 			}
 			// Преобразуем из Markdown в HTML
 			data = Markdown(data)
@@ -204,7 +214,7 @@ func compiler(sourcePath, outputFilename string) error {
 		return err
 	}
 	// Добавляем оглавление как скрытый (вспомогательный) файл
-	fileWriter, err := writer.Add("toc.xhtml", epub.ContentTypeAuxiliary, "nav")
+	fileWriter, err := writer.Add("_toc.xhtml", epub.ContentTypeAuxiliary, "nav")
 	if err != nil {
 		return err
 	}
@@ -218,10 +228,13 @@ func compiler(sourcePath, outputFilename string) error {
 		"title": "Оглавление",
 		"toc":   nav,
 	}
+	if cssfile != "" {
+		tdata["_globalcssfile_"] = cssfile
+	}
 	if err = templates.ExecuteTemplate(fileWriter, "toc", tdata); err != nil {
 		return err
 	}
-	log.Printf("Generate %s %q", "toc.xhtml", "nav")
+	log.Printf("Generate %s %q", "_toc.xhtml", "nav")
 
 	return nil
 }
