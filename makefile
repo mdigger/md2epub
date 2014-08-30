@@ -2,16 +2,14 @@ SOURCE = samples/zultys
 NAME = md2epub
 OUT = out
 
-test: $(NAME) $(OUT)
+test: $(NAME)
 	./$(NAME) $(SOURCE)
+	rm -rf $(OUT)
 	unzip -o $(SOURCE).epub -d $(OUT)
 
 $(NAME): build
 
 build: 
 	go build
-
-$(OUT):
-	rm -rf $(OUT)
 
 .PHONY: test build

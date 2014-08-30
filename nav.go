@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/mdigger/epub3"
+	"html/template"
 )
 
 type NavigationItem struct {
@@ -12,3 +13,9 @@ type NavigationItem struct {
 }
 
 type Navigaton []*NavigationItem
+
+type TOCItem struct {
+	ID    string
+	Text  template.HTML
+	Level int
+}

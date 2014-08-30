@@ -17,8 +17,7 @@ var templates = template.Must(template.New("").Parse(`
 </html>{{ end }}
 
 {{ define "page" }}{{ template "header" . }}
-{{ .content }}
-{{ template "footer" }}{{ end }}
+{{ .content }}{{ template "footer" }}{{ end }}
 
 {{ define "toc" }}{{ template "header" . }}
 <nav epub:type="toc">

@@ -5,14 +5,13 @@ import (
 	"code.google.com/p/go.net/html"
 	"encoding/xml"
 	"github.com/mdigger/epub3"
-	"github.com/mdigger/md2epub/markdown"
 	"github.com/mdigger/metadata"
-	"github.com/russross/blackfriday"
 	"html/template"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -20,6 +19,8 @@ var (
 	metadataFiles = []string{"metadata.yaml", "metadata.yml", "metadata.json"}
 	coverFiles    = []string{"cover.png", "cover.svg", "cover.jpeg", "cover.jpg", "cover.gif"}
 )
+
+var reMultiNewLines = regexp.MustCompile(`^\n{2,}$`)
 
 // Компилятор публикации
 func compiler(sourcePath, outputFilename string) error {
@@ -104,15 +105,18 @@ func compiler(sourcePath, outputFilename string) error {
 				title = "* * *"
 			}
 			meta["title"] = title
-			// Инициализируем HTML-преобразователь из формата Markdown
-			mdRender := markdown.NewRender(lang)
 			// Преобразуем из Markdown в HTML
-			data = blackfriday.Markdown(data, mdRender, markdown.Extensions)
-			data = bytes.TrimSpace(data)
+			data = Markdown(data)
 			// Прогоняем через конвертер XHTML
 			nodes, err := html.ParseFragment(bytes.NewReader(data), &html.Node{Type: html.ElementNode})
 			if err != nil {
 				return err
+			}
+			// Избавляемся от пустых строк
+			for _, node := range nodes {
+				if node.Type == html.TextNode && reMultiNewLines.MatchString(node.Data) {
+					node.Data = "\n"
+				}
 			}
 			var buf bytes.Buffer
 			for _, node := range nodes {
