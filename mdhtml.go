@@ -5,6 +5,7 @@ import (
 	"code.google.com/p/go.net/html"
 	"fmt"
 	"github.com/russross/blackfriday"
+	"regexp"
 )
 
 var (
@@ -43,12 +44,15 @@ func (_ *htmlRender) Footnotes(out *bytes.Buffer, text func() bool) {
 	text()
 }
 
+var reMultilines = regexp.MustCompile(`\n{2,}`)
+
 func (_ *htmlRender) FootnoteItem(out *bytes.Buffer, name, text []byte, flags int) {
 	fmt.Fprintf(out, "\n<aside id=\"fn:%s\" epub:type=\"footnote\">\n%s</aside>\n",
-		hashSlug(name), text)
+		hashSlug(name), reMultilines.ReplaceAllLiteral(text, []byte("\n")))
 }
 
 func (_ *htmlRender) NormalText(out *bytes.Buffer, text []byte) {
+	text = reMultilines.ReplaceAllLiteral(text, []byte("\n")) // Убираем пустые строки
 	str := html.EscapeString(string(text))
 	out.WriteString(str)
 	// TODO: Smartypants
