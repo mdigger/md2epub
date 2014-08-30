@@ -18,9 +18,9 @@ var (
 		blackfriday.EXTENSION_SPACE_HEADERS |
 		blackfriday.EXTENSION_FOOTNOTES |
 		blackfriday.EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK |
-		blackfriday.EXTENSION_HEADER_IDS
+		blackfriday.EXTENSION_HEADER_IDS |
 		// blackfriday.EXTENSION_LAX_HTML_BLOCKS |
-		// blackfriday.EXTENSION_HARD_LINE_BREAK |
+		blackfriday.EXTENSION_HARD_LINE_BREAK
 	htmlFlags = 0 |
 		blackfriday.HTML_USE_XHTML
 )
