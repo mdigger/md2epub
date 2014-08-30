@@ -1,4 +1,4 @@
-SOURCE = test
+SOURCE = samples/zultys
 NAME = md2epub
 OUT = out
 

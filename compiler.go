@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bytes"
+	"code.google.com/p/go.net/html"
 	"encoding/xml"
 	"github.com/mdigger/epub3"
 	"github.com/mdigger/md2epub/markdown"
 	"github.com/mdigger/metadata"
 	"github.com/russross/blackfriday"
+	"html/template"
 	"io"
 	"log"
 	"os"
@@ -71,15 +74,15 @@ func compiler(sourcePath, outputFilename string) error {
 		if err != nil {
 			return nil
 		}
-		// Не обрабатываем отдельно каталоги
 		if finfo.IsDir() {
 			// Полностью игнорируем каталоги, имя которых начинается с точки
-			if filepath.Base(filename)[0] == '.' {
+			if filepath.Base(filename)[0] == '.' && len(filename) > 1 {
 				return filepath.SkipDir
 			}
+			// Не обрабатываем отдельно каталоги
 			return nil
 		}
-		// Игнорируем файлы, именя которых начинаются с точки
+		// Игнорируем файлы, имя которых начинаются с точки
 		if filepath.Base(filename)[0] == '.' {
 			return nil
 		}
@@ -95,14 +98,34 @@ func compiler(sourcePath, outputFilename string) error {
 			if lang == "" {
 				lang = publang
 			}
+			meta["lang"] = lang
 			title := meta.Title()
 			if title == "" {
 				title = "* * *"
 			}
+			meta["title"] = title
 			// Инициализируем HTML-преобразователь из формата Markdown
-			mdRender := markdown.NewRender(lang, title, "")
+			mdRender := markdown.NewRender(lang)
 			// Преобразуем из Markdown в HTML
 			data = blackfriday.Markdown(data, mdRender, markdown.Extensions)
+			data = bytes.TrimSpace(data)
+			// Прогоняем через конвертер XHTML
+			nodes, err := html.ParseFragment(bytes.NewReader(data), &html.Node{Type: html.ElementNode})
+			if err != nil {
+				return err
+			}
+			var buf bytes.Buffer
+			for _, node := range nodes {
+				if err := html.Render(&buf, node); err != nil {
+					return err
+				}
+			}
+			// Сохраняем получившийся HTML
+			meta["content"] = template.HTML(buf.String())
+			buf.Reset() // Сбрасываем буфер
+			if err = templates.ExecuteTemplate(&buf, "page", meta); err != nil {
+				return err
+			}
 			// Изменяем расширение имени файла на .xhtml
 			filename = filename[:len(filename)-len(filepath.Ext(filename))] + ".xhtml"
 			// Вычисляем, основной это текст или скрытый
@@ -121,7 +144,8 @@ func compiler(sourcePath, outputFilename string) error {
 			if _, err := io.WriteString(fileWriter, xml.Header); err != nil {
 				return err
 			}
-			if _, err := fileWriter.Write(data); err != nil {
+			// Записываем данные
+			if _, err := buf.WriteTo(fileWriter); err != nil {
 				return err
 			}
 			// Добавляем информацию о файле в оглавление
@@ -178,12 +202,12 @@ func compiler(sourcePath, outputFilename string) error {
 		return err
 	}
 	// Преобразуем по шаблону и записываем в публикацию.
-	err = tnav.Execute(fileWriter, map[string]interface{}{
+	tdata := map[string]interface{}{
 		"lang":  publang,
 		"title": "Оглавление",
 		"toc":   nav,
-	})
-	if err != nil {
+	}
+	if err = templates.ExecuteTemplate(fileWriter, "toc", tdata); err != nil {
 		return err
 	}
 	log.Printf("Generate %s %q", "toc.xhtml", "nav")

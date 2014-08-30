@@ -12,40 +12,33 @@ import (
 )
 
 var (
-	Extensions = 0
+	Extensions = 0 |
+		blackfriday.EXTENSION_NO_INTRA_EMPHASIS |
+		blackfriday.EXTENSION_TABLES |
+		blackfriday.EXTENSION_FENCED_CODE |
+		blackfriday.EXTENSION_AUTOLINK |
+		blackfriday.EXTENSION_STRIKETHROUGH |
+		blackfriday.EXTENSION_LAX_HTML_BLOCKS |
+		blackfriday.EXTENSION_SPACE_HEADERS |
+		// blackfriday.EXTENSION_HARD_LINE_BREAK |
+		// blackfriday.EXTENSION_TAB_SIZE_EIGHT |
+		blackfriday.EXTENSION_FOOTNOTES |
+		blackfriday.EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK |
+		blackfriday.EXTENSION_HEADER_IDS |
+		blackfriday.EXTENSION_TITLEBLOCK
 )
 
-func init() {
-	Extensions |= blackfriday.EXTENSION_NO_INTRA_EMPHASIS
-	Extensions |= blackfriday.EXTENSION_TABLES
-	Extensions |= blackfriday.EXTENSION_FENCED_CODE
-	Extensions |= blackfriday.EXTENSION_AUTOLINK
-	Extensions |= blackfriday.EXTENSION_STRIKETHROUGH
-	Extensions |= blackfriday.EXTENSION_LAX_HTML_BLOCKS
-	Extensions |= blackfriday.EXTENSION_SPACE_HEADERS
-	// Extensions |= blackfriday.EXTENSION_HARD_LINE_BREAK
-	// Extensions |= blackfriday.EXTENSION_TAB_SIZE_EIGHT
-	Extensions |= blackfriday.EXTENSION_FOOTNOTES
-	Extensions |= blackfriday.EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK
-	Extensions |= blackfriday.EXTENSION_HEADER_IDS
-	Extensions |= blackfriday.EXTENSION_TITLEBLOCK
-}
-
 type htmlRender struct {
-	lang         string
-	title        string
-	csslink      string
+	Lang         string
 	headerCount  int
 	currentLevel int
 	toc          *bytes.Buffer
 	smartypants  *smartypantsRenderer
 }
 
-func NewRender(lang, title, csslink string) *htmlRender {
+func NewRender(lang string) *htmlRender {
 	return &htmlRender{
-		lang:         lang,
-		title:        title,
-		csslink:      csslink,
+		Lang:         lang,
 		headerCount:  0,
 		currentLevel: 0,
 		toc:          new(bytes.Buffer),
@@ -341,33 +334,9 @@ func (self *htmlRender) NormalText(out *bytes.Buffer, text []byte) {
 }
 
 func (self *htmlRender) DocumentHeader(out *bytes.Buffer) {
-	out.WriteString("<!DOCTYPE html>\n")
-	out.WriteString("<html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:epub=\"http://www.idpf.org/2007/ops\"")
-	if self.lang != "" {
-		out.WriteString(" xml:lang=\"")
-		out.WriteString(self.lang)
-		out.WriteString("\" lang=\"")
-		out.WriteString(self.lang)
-		out.WriteRune('"')
-	}
-	out.WriteString(">\n")
-	out.WriteString("<head>\n")
-	out.WriteString("  <title>")
-	self.NormalText(out, []byte(self.title))
-	out.WriteString("</title>\n")
-	out.WriteString("  <meta charset=\"utf-8\" />\n")
-	if self.csslink != "" {
-		out.WriteString("  <link rel=\"stylesheet\" type=\"text/css\" href=\"")
-		out.WriteString(html.EscapeString(self.csslink))
-		out.WriteString("\" />")
-	}
-	out.WriteString("</head>\n")
-	out.WriteString("<body>\n")
 }
 
 func (self *htmlRender) DocumentFooter(out *bytes.Buffer) {
-	out.WriteString("</body>\n")
-	out.WriteString("</html>\n")
 }
 
 func (self *htmlRender) GetFlags() int {

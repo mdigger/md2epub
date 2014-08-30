@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 	"os"
-	"path/filepath"
 )
 
 func main() {
@@ -20,7 +19,7 @@ func main() {
 	if flag.NArg() > 1 {
 		outputFilename = flag.Arg(1)
 	} else {
-		outputFilename = filepath.Base(sourcePath) + ".epub"
+		outputFilename = sourcePath + ".epub"
 	}
 	if err := compiler(sourcePath, outputFilename); err != nil {
 		log.Fatal(err)
