@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"code.google.com/p/go.net/html"
 	"encoding/xml"
+	"github.com/mdigger/bpool"
 	"github.com/mdigger/epub3"
 	"github.com/mdigger/metadata"
 	"html/template"
@@ -134,13 +135,14 @@ func compiler(sourcePath, outputFilename string) error {
 				return err
 			}
 			// Избавляемся от пустых строк между тегами и воссоздаем нормализованный XHTML.
-			var buf bytes.Buffer
+			buf := bpool.Get()
+			defer bpool.Put(buf)
 			for _, node := range nodes {
 				if node.Type == html.TextNode && reMultiNewLines.MatchString(node.Data) {
 					buf.WriteByte('\n')
 					continue
 				}
-				if err := html.Render(&buf, node); err != nil {
+				if err := html.Render(buf, node); err != nil {
 					return err
 				}
 			}
@@ -148,7 +150,7 @@ func compiler(sourcePath, outputFilename string) error {
 			meta["content"] = template.HTML(buf.String())
 			buf.Reset() // Сбрасываем буфер
 			// Осуществляем преобразование по шаблону для формирования полноценной страницы
-			if err = templates.ExecuteTemplate(&buf, "page", meta); err != nil {
+			if err = templates.ExecuteTemplate(buf, "page", meta); err != nil {
 				return err
 			}
 			// Изменяем расширение имени файла на .xhtml
