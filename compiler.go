@@ -92,8 +92,8 @@ func compiler(sourcePath, outputFilename string) error {
 			// Не обрабатываем отдельно каталоги
 			return nil
 		}
-		// Игнорируем файлы, имя которых начинаются с точки
-		if filepath.Base(filename)[0] == '.' {
+		// Игнорируем файлы, имя которых начинаются с точки или волнистой линии
+		if ch := filepath.Base(filename)[0]; ch == '.' || ch == '~' {
 			return nil
 		}
 		// Обрабатываем файлы в зависимости от расширения
