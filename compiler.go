@@ -134,9 +134,10 @@ func compiler(sourcePath, outputFilename string) error {
 			if err != nil {
 				return err
 			}
-			// Избавляемся от пустых строк между тегами и воссоздаем нормализованный XHTML.
+			// Инициализируем внутренний пул для работы с информацией
 			buf := bpool.Get()
 			defer bpool.Put(buf)
+			// Избавляемся от пустых строк между тегами и воссоздаем нормализованный XHTML
 			for _, node := range nodes {
 				if node.Type == html.TextNode && reMultiNewLines.MatchString(node.Data) {
 					buf.WriteByte('\n')
@@ -178,7 +179,6 @@ func compiler(sourcePath, outputFilename string) error {
 			})
 			// Выводим информацию о файле
 			log.Printf("Add %s %q", filename, title)
-
 		case ".jpg", ".jpe", ".jpeg", ".png", ".gif", ".svg",
 			".mp3", ".mp4", ".aac", ".m4a", ".m4v", ".m4b", ".m4p", ".m4r",
 			".css", ".js", ".javascript",
@@ -202,13 +202,11 @@ func compiler(sourcePath, outputFilename string) error {
 				properties = []string{"media"}
 			}
 			log.Printf("Add %s\t%q", filename, strings.Join(properties, ", "))
-
 		default: // Другое — игнорируем
 			if !isFilename(filename, metadataFiles) {
 				log.Printf("Ignore %s", filename)
 			}
 		}
-
 		return nil
 	}
 	// Перебираем все файлы и подкаталоги в исходном каталоге
@@ -236,7 +234,7 @@ func compiler(sourcePath, outputFilename string) error {
 	if err = templates.ExecuteTemplate(fileWriter, "toc", tdata); err != nil {
 		return err
 	}
+	// Выводим информацию о добавленном оглавлении
 	log.Printf("Generate %s %q", "_toc.xhtml", "nav")
-
 	return nil
 }
