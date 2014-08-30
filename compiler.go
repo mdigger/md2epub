@@ -15,14 +15,16 @@ import (
 	"strings"
 )
 
+// Списки имен предопределенных файлов для обработки.
 var (
 	metadataFiles = []string{"metadata.yaml", "metadata.yml", "metadata.json"}
 	coverFiles    = []string{"cover.png", "cover.svg", "cover.jpeg", "cover.jpg", "cover.gif"}
 )
 
+// Для отслеживания пустых строк между тегами.
 var reMultiNewLines = regexp.MustCompile(`^\n{2,}$`)
 
-// Компилятор публикации
+// Компилятор публикации в формат EPUB.
 func compiler(sourcePath, outputFilename string) error {
 	// Делаем исходный каталог текущим, чтобы не вычислять относительный путь. По окончании
 	// обработки восстанавливаем исходный каталог обратно.
@@ -95,43 +97,18 @@ func compiler(sourcePath, outputFilename string) error {
 			if err != nil {
 				return err
 			}
+			// Определяем язык файла
 			lang := meta.Lang()
 			if lang == "" {
 				lang = publang
 			}
 			meta["lang"] = lang
+			// Вытаскиваем заголовок
 			title := meta.Title()
 			if title == "" {
 				title = "* * *"
 			}
 			meta["title"] = title
-			// Преобразуем из Markdown в HTML
-			data = Markdown(data)
-			// Прогоняем через конвертер XHTML
-			nodes, err := html.ParseFragment(bytes.NewReader(data), &html.Node{Type: html.ElementNode})
-			if err != nil {
-				return err
-			}
-			// Избавляемся от пустых строк
-			for _, node := range nodes {
-				if node.Type == html.TextNode && reMultiNewLines.MatchString(node.Data) {
-					node.Data = "\n"
-				}
-			}
-			var buf bytes.Buffer
-			for _, node := range nodes {
-				if err := html.Render(&buf, node); err != nil {
-					return err
-				}
-			}
-			// Сохраняем получившийся HTML
-			meta["content"] = template.HTML(buf.String())
-			buf.Reset() // Сбрасываем буфер
-			if err = templates.ExecuteTemplate(&buf, "page", meta); err != nil {
-				return err
-			}
-			// Изменяем расширение имени файла на .xhtml
-			filename = filename[:len(filename)-len(filepath.Ext(filename))] + ".xhtml"
 			// Вычисляем, основной это текст или скрытый
 			var ct epub.ContentType
 			if meta.GetBool("hidden") {
@@ -139,7 +116,34 @@ func compiler(sourcePath, outputFilename string) error {
 			} else {
 				ct = epub.ContentTypePrimary
 			}
-			// Получает io.Writer для записи содержимого файла
+			// Преобразуем из Markdown в HTML
+			data = Markdown(data)
+			// Разбираем получившийся HTML для последующей нормализации
+			nodes, err := html.ParseFragment(bytes.NewReader(data), &html.Node{Type: html.ElementNode})
+			if err != nil {
+				return err
+			}
+			// Избавляемся от пустых строк между тегами и воссоздаем нормализованный XHTML.
+			var buf bytes.Buffer
+			for _, node := range nodes {
+				if node.Type == html.TextNode && reMultiNewLines.MatchString(node.Data) {
+					buf.WriteByte('\n')
+					continue
+				}
+				if err := html.Render(&buf, node); err != nil {
+					return err
+				}
+			}
+			// Сохраняем получившийся HTML в том же самом описании метаданных, чтобы не плодить сущности
+			meta["content"] = template.HTML(buf.String())
+			buf.Reset() // Сбрасываем буфер
+			// Осуществляем преобразование по шаблону для формирования полноценной страницы
+			if err = templates.ExecuteTemplate(&buf, "page", meta); err != nil {
+				return err
+			}
+			// Изменяем расширение имени файла на .xhtml
+			filename = filename[:len(filename)-len(filepath.Ext(filename))] + ".xhtml"
+			// Получаем io.Writer для записи содержимого файла
 			fileWriter, err := writer.Add(filename, ct)
 			if err != nil {
 				return err
@@ -157,8 +161,10 @@ func compiler(sourcePath, outputFilename string) error {
 				Title:       title,
 				Subtitle:    meta.Subtitle(),
 				Filename:    filename,
+				Level:       meta.GetInt("level"),
 				ContentType: ct,
 			})
+			// Выводим информацию о файле
 			log.Printf("Add %s %q", filename, title)
 
 		case ".jpg", ".jpe", ".jpeg", ".png", ".gif", ".svg",
@@ -171,18 +177,19 @@ func compiler(sourcePath, outputFilename string) error {
 			// Специальная обработка
 			switch {
 			case !setCover && isFilename(filename, coverFiles):
-				// Обложка
+				// Обложка публикации
 				properties = []string{"cover-image"}
 				setCover = true
 			}
+			// Добавляем файл в публикацию
 			if err := writer.AddFile(filename, filename, epub.ContentTypeMedia, properties...); err != nil {
 				return err
 			}
-			if properties != nil {
-				log.Printf("Add %s\t%q", filename, strings.Join(properties, ", "))
-			} else {
-				log.Printf("Add %s", filename)
+			// Выводим информацию о добавленном файле
+			if properties == nil {
+				properties = []string{"media"}
 			}
+			log.Printf("Add %s\t%q", filename, strings.Join(properties, ", "))
 
 		default: // Другое — игнорируем
 			if !isFilename(filename, metadataFiles) {
