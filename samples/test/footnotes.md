@@ -1,17 +1,5 @@
-kljhkljhkj
+This is a footnote[^1]^[and this is an inline footnote]
 
-testing footnotes.[^a]
+[^1]: the footnote text.
 
-[^a]: This is the note
-
-
--- testing footnotes.[^a2]
-
-[^a2]: This is the note
-
-	askjdfa;ksdf
-
-	aksdjfalksdjf
-
-
-	akldsjflaksdjf
+    may be multiple paragraphs.
