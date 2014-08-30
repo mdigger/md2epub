@@ -9,7 +9,6 @@ import (
 	"os"
 	"strings"
 	"text/tabwriter"
-	"time"
 )
 
 const defaultLang = "en"
@@ -174,9 +173,9 @@ func loadMetadata(name string) (pubmeta *epub.Metadata, err error) {
 		pubmeta.Coverage.Add("", coverage)
 	}
 	// Добавляем дату
-	if date := meta.Date(); !date.IsZero() {
+	if date := meta.Get("date"); date != "" {
 		pubmeta.Date = &epub.Element{
-			Value: date.UTC().Format(time.RFC3339),
+			Value: date,
 		}
 	}
 	// Добавляем копирайты
