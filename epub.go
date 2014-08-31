@@ -62,9 +62,13 @@ func (pub *EPUBCompiler) walk(filename string, finfo os.FileInfo, err error) err
 	// Обрабатываем файлы в зависимости от расширения
 	switch ext := filepath.Ext(filename); {
 	case isFilename(ext, pub.config.Markdown):
-		pub.addMarkdown(filename)
+		if err := pub.addMarkdown(filename); err != nil {
+			return err
+		}
 	default:
-		pub.addMedia(filename)
+		if err := pub.addMedia(filename); err != nil {
+			return err
+		}
 	}
 	return nil
 }
