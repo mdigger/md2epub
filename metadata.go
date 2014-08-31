@@ -1,49 +1,64 @@
 package main
 
 import (
-	"fmt"
+	"code.google.com/p/go-uuid/uuid"
 	"github.com/mdigger/epub3"
 	"github.com/mdigger/metadata"
 	"gopkg.in/yaml.v1"
 	"io/ioutil"
 	"os"
 	"strings"
-	"text/tabwriter"
 )
 
-const defaultLang = "en"
-
-func defaultMetada() *epub.Metadata {
-	return &epub.Metadata{
+// loadMetadata загружает или создает описание публикации.
+func loadMetadata(config *Config) (*epub.Metadata, error) {
+	// Инициализируем описание метаданных
+	pubmeta := &epub.Metadata{
 		DC:   "http://purl.org/dc/elements/1.1/",
 		Meta: make([]*epub.Meta, 0),
 	}
+	// Загружаем описание метаданных публикации
+	for _, name := range config.Metadata {
+		fi, err := os.Stat(name)
+		if err != nil || fi.IsDir() {
+			continue
+		}
+		// Читаем файл с описанием метаданных публикации
+		data, err := ioutil.ReadFile(name)
+		if err != nil {
+			return nil, err
+		}
+		// Разбираем метаданные
+		metadata := make(metadata.Metadata)
+		if err := yaml.Unmarshal(data, metadata); err != nil {
+			return nil, err
+		}
+		// Переводим описание метаданных в метаданные публикации
+		convertMetadata(metadata, pubmeta)
+		break
+	}
+	// Устанавливаем язык, если его нет
+	if len(pubmeta.Language) == 0 {
+		pubmeta.Language.Add("", config.Lang)
+	}
+	// Добавляем заголовок, если его нет
+	if len(pubmeta.Title) == 0 {
+		pubmeta.Title.Add("", config.Title)
+	}
+	// Добавляем уникальный идентификатор, если его нет
+	if len(pubmeta.Identifier) == 0 {
+		pubmeta.Identifier.Add("uuid", "urn:uuid:"+uuid.New())
+	}
+	return pubmeta, nil
 }
-func loadMetadata(name string) (pubmeta *epub.Metadata, err error) {
-	// Читаем файл с описанием метаданных публикации
-	data, err := ioutil.ReadFile(name)
-	if err != nil {
-		return nil, err
-	}
-	// Разбираем метаданные
-	meta := make(metadata.Metadata)
-	if err := yaml.Unmarshal(data, meta); err != nil {
-		return nil, err
-	}
-	// Инициализируем описание метаданных
-	pubmeta = defaultMetada()
-	// Инициализируем вывод
-	tab := tabwriter.NewWriter(os.Stdout, 8, 1, 1, ' ', 0)
-	fmt.Fprintln(tab, strings.Repeat("—", 80))
+
+func convertMetadata(metadata metadata.Metadata, pubmeta *epub.Metadata) {
 	// Добавляем язык
-	lang := meta.Lang()
-	if lang == "" {
-		lang = defaultLang
+	if lang := metadata.Lang(); lang == "" {
+		pubmeta.Language.Add("", lang)
 	}
-	pubmeta.Language.Add("", lang)
-	fmt.Fprintf(tab, "Lang:\t%s\n", lang)
 	// Добавляем заголовок
-	if title := meta.Title(); title != "" {
+	if title := metadata.Title(); title != "" {
 		pubmeta.Title.Add("title", title)
 		pubmeta.Meta = append(pubmeta.Meta, &epub.Meta{
 			Refines:  "#title",
@@ -54,10 +69,9 @@ func loadMetadata(name string) (pubmeta *epub.Metadata, err error) {
 			Property: "display-seq",
 			Value:    "1",
 		})
-		fmt.Fprintf(tab, "Title:\t%s\n", title)
 	}
 	// Добавляем подзаголовок
-	if subtitle := meta.Subtitle(); subtitle != "" {
+	if subtitle := metadata.Subtitle(); subtitle != "" {
 		pubmeta.Title.Add("subtitle", subtitle)
 		pubmeta.Meta = append(pubmeta.Meta, &epub.Meta{
 			Refines:  "#subtitle",
@@ -68,10 +82,9 @@ func loadMetadata(name string) (pubmeta *epub.Metadata, err error) {
 			Property: "display-seq",
 			Value:    "2",
 		})
-		fmt.Fprintf(tab, "Subtitle:\t%s\n", subtitle)
 	}
 	// Добавляем название коллекции
-	if collection := meta.Get("collection"); collection != "" {
+	if collection := metadata.Get("collection"); collection != "" {
 		pubmeta.Title.Add("collection", collection)
 		pubmeta.Meta = append(pubmeta.Meta, &epub.Meta{
 			Refines:  "#collection",
@@ -83,7 +96,7 @@ func loadMetadata(name string) (pubmeta *epub.Metadata, err error) {
 			Value:    collection,
 		})
 		// Добавляем порядковый номер в коллекции, если он есть
-		if collectionNumber := meta.Get("sequence"); collectionNumber != "" {
+		if collectionNumber := metadata.Get("sequence"); collectionNumber != "" {
 			pubmeta.Meta = append(pubmeta.Meta, &epub.Meta{
 				Refines:  "#collection",
 				Property: "group-position",
@@ -93,99 +106,72 @@ func loadMetadata(name string) (pubmeta *epub.Metadata, err error) {
 				Property: "group-position",
 				Value:    collectionNumber,
 			})
-			fmt.Fprintf(tab, "Collection:\t%s (#%s)\n", collection, collectionNumber)
-		} else {
-			fmt.Fprintf(tab, "Collection:\t%s\n", collection)
 		}
 	}
 	// Добавляем название редакции
-	if edition := meta.Get("edition"); edition != "" {
+	if edition := metadata.Get("edition"); edition != "" {
 		pubmeta.Title.Add("edition", edition)
 		pubmeta.Meta = append(pubmeta.Meta, &epub.Meta{
 			Refines:  "#edition",
 			Property: "title-type",
 			Value:    "edition",
 		})
-		fmt.Fprintf(tab, "Edition:\t%s\n", edition)
 	}
 	// Добавляем расширенное название публикации, если оно есть
-	if fulltitle := meta.Get("fulltitle"); fulltitle != "" {
+	if fulltitle := metadata.Get("fulltitle"); fulltitle != "" {
 		pubmeta.Title.Add("fulltitle", fulltitle)
 		pubmeta.Meta = append(pubmeta.Meta, &epub.Meta{
 			Refines:  "#fulltitle",
 			Property: "title-type",
 			Value:    "expanded",
 		})
-		fmt.Fprintf(tab, "Full title:\t%s\n", fulltitle)
 	}
 	// Добавляем авторов
-	for i, author := range meta.Authors() {
+	for _, author := range metadata.Authors() {
 		pubmeta.Creator.Add("", author)
-		if i == 0 {
-			fmt.Fprintf(tab, "Author:\t%s\n", author)
-		} else {
-			fmt.Fprintf(tab, "\t%s\n", author)
-		}
 	}
 	// Добавляем второстепенных авторов
-	for i, author := range meta.GetList("contributor") {
+	for _, author := range metadata.GetList("contributor") {
 		pubmeta.Contributor.Add("", author)
-		if i == 0 {
-			fmt.Fprintf(tab, "Contributor:\t%s\n", author)
-		} else {
-			fmt.Fprintf(tab, "\t%s\n", author)
-		}
 	}
 	// Добавляем информацию об издателях
-	for i, author := range meta.GetList("publisher") {
+	for _, author := range metadata.GetList("publisher") {
 		pubmeta.Publisher.Add("", author)
-		if i == 0 {
-			fmt.Fprintf(tab, "Publisher:\t%s\n", author)
-		} else {
-			fmt.Fprintf(tab, "\t%s\n", author)
-		}
 	}
 	// Добавляем уникальные идентификаторы
 	for _, name := range []string{"uuid", "id", "identifier", "doi", "isbn", "issn"} {
-		if value := meta.Get(name); value != "" {
+		if value := metadata.Get(name); value != "" {
 			switch name {
 			case "uuid", "doi", "isbn", "issn":
 				value = "urn:" + name + ":" + value
 				// TODO: Добавить префиксы для других идентификаторов
 			}
 			pubmeta.Identifier.Add(name, value)
-			fmt.Fprintf(tab, "%s:\t%s\n", strings.ToUpper(name), value)
 		}
 	}
 	// Добавляем краткое описание
-	if description := meta.Description(); description != "" {
+	if description := metadata.Description(); description != "" {
+		// Убираем новые строки и множественные пробелы
+		description = strings.Join(strings.Fields(description), " ")
 		pubmeta.Description.Add("description", description)
+
 	}
 	// Добавляем ключевые слова
-	if keywords := meta.Keywords(); len(keywords) > 0 {
-		for _, keyword := range keywords {
-			pubmeta.Subject.Add("", keyword)
-		}
-		fmt.Fprintf(tab, "Keywords:\t%s\n", strings.Join(keywords, ", "))
+	for _, keyword := range metadata.Keywords() {
+		pubmeta.Subject.Add("", keyword)
 	}
 	// Добавляем описание сферы действия
-	if coverage := meta.Get("coverage"); coverage != "" {
+	if coverage := metadata.Get("coverage"); coverage != "" {
 		pubmeta.Coverage.Add("", coverage)
 	}
 	// Добавляем дату
-	if date := meta.Get("date"); date != "" {
-		pubmeta.Date = &epub.Element{
-			Value: date,
-		}
+	if date := metadata.Get("date"); date != "" {
+		pubmeta.Date = &epub.Element{Value: date}
 	}
 	// Добавляем копирайты
 	for _, name := range []string{"copyright", "rights"} {
-		if rights := meta.Get(name); rights != "" {
+		if rights := metadata.Get(name); rights != "" {
 			pubmeta.Rights.Add(name, rights)
-			fmt.Fprintf(tab, "%s:\t%s\n", strings.Title(name), rights)
 		}
 	}
-	fmt.Fprintln(tab, strings.Repeat("—", 80))
-	tab.Flush()
-	return pubmeta, err
 }

@@ -28,7 +28,7 @@ func main() {
 		outputFilename = sourcePath + ".epub"
 	}
 	// Запускаем компиляцию исходников
-	if err := compiler(sourcePath, outputFilename); err != nil {
+	if err := Compile(sourcePath, outputFilename, DefaultConfig); err != nil {
 		log.Fatal(err)
 	}
 }
