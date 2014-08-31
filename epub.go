@@ -98,11 +98,11 @@ func (pub *EPUBCompiler) addMarkdown(filename string) error {
 	}
 	// Добавляем глобальный стилевой файл публикации
 	if pub.cssfile != "" {
-		rel, err := filepath.Rel(filepath.Dir(filename), pub.cssfile)
-		if err != nil {
+		if rel, err := filepath.Rel(filepath.Dir(filename), pub.cssfile); err == nil {
+			meta["_globalcssfile_"] = filepath.ToSlash(rel)
+		} else {
 			return err
 		}
-		meta["_globalcssfile_"] = filepath.ToSlash(rel)
 	}
 	// Преобразуем из Markdown в HTML
 	data = Markdown(data)
@@ -147,6 +147,14 @@ func (pub *EPUBCompiler) addMarkdown(filename string) error {
 	}
 	// Добавляем расширение имени файла .xhtml
 	filename += ".xhtml"
+	// Добавляем информацию о файле в оглавление
+	pub.nav = append(pub.nav, &NavigationItem{
+		Title:       title,
+		Subtitle:    meta.Subtitle(),
+		Filename:    filename,
+		Level:       meta.GetInt("level"),
+		ContentType: ct,
+	})
 	// Получаем io.Writer для записи содержимого файла
 	fileWriter, err := pub.writer.Add(filename, ct, properties...)
 	if err != nil {
@@ -157,18 +165,7 @@ func (pub *EPUBCompiler) addMarkdown(filename string) error {
 		return err
 	}
 	// Записываем данные
-	if _, err := buf.WriteTo(fileWriter); err != nil {
-		return err
-	}
-	// Добавляем информацию о файле в оглавление
-	pub.nav = append(pub.nav, &NavigationItem{
-		Title:       title,
-		Subtitle:    meta.Subtitle(),
-		Filename:    filename,
-		Level:       meta.GetInt("level"),
-		ContentType: ct,
-	})
-	return nil
+	return buf.WriteTo(fileWriter)
 }
 
 func (pub *EPUBCompiler) addMedia(filename string) error {
@@ -177,11 +174,8 @@ func (pub *EPUBCompiler) addMedia(filename string) error {
 	case !pub.setCover && isFilename(filename, pub.config.Covers):
 		// Обложка публикации
 		properties = []string{"cover-image"}
-		pub.setCover = true
+		pub.setCover = true // Обрабатываем только одну обложку
 	}
 	// Добавляем файл в публикацию
-	if err := pub.writer.AddFile(filename, filename, epub.ContentTypeMedia, properties...); err != nil {
-		return err
-	}
-	return nil
+	return pub.writer.AddFile(filename, filename, epub.ContentTypeMedia, properties...)
 }
