@@ -62,15 +62,10 @@ func (pub *EPUBCompiler) walk(filename string, finfo os.FileInfo, err error) err
 	// Обрабатываем файлы в зависимости от расширения
 	switch ext := filepath.Ext(filename); {
 	case isFilename(ext, pub.config.Markdown):
-		if err := pub.addMarkdown(filename); err != nil {
-			return err
-		}
+		return pub.addMarkdown(filename)
 	default:
-		if err := pub.addMedia(filename); err != nil {
-			return err
-		}
+		return pub.addMedia(filename)
 	}
-	return nil
 }
 
 var reMultiNewLines = regexp.MustCompile(`^\n{2,}$`)
