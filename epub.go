@@ -14,6 +14,18 @@ import (
 	"regexp"
 )
 
+// NavigationItem описывает ссылку из оглавления на файл
+type NavigationItem struct {
+	Title       string           // Заголовок
+	Subtitle    string           // Подзаголовок
+	Level       int              // Уровень заголовка
+	Filename    string           // Имя файла
+	ContentType epub.ContentType // Тип файла
+}
+
+// Navigaton описывает оглавление публикации
+type Navigaton []*NavigationItem
+
 type EPUBCompiler struct {
 	config   *Config      // Конфигурация параметров по умолчанию
 	writer   *epub.Writer // EPUB
