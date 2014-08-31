@@ -147,6 +147,7 @@ func compiler(sourcePath, outputFilename string) error {
 					buf.WriteByte('\n')
 					continue
 				}
+				// TODO: Убрать пустые строки во вложенных элементах
 				if err := html.Render(buf, node); err != nil {
 					return err
 				}
@@ -227,12 +228,13 @@ func compiler(sourcePath, outputFilename string) error {
 		return err
 	}
 	// Преобразуем по шаблону и записываем в публикацию.
-	tdata := map[string]interface{}{
+	tdata := metadata.Metadata{
 		"lang":  publang,
 		"title": "Оглавление",
 		"toc":   nav,
 	}
 	if cssfile != "" {
+		// Здесь не нужен относительный путь, т.к. они на одном уровне
 		tdata["_globalcssfile_"] = cssfile
 	}
 	if err = templates.ExecuteTemplate(fileWriter, "toc", tdata); err != nil {
