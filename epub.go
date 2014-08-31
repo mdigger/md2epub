@@ -27,13 +27,14 @@ type NavigationItem struct {
 type Navigaton []*NavigationItem
 
 type EPUBCompiler struct {
-	config   *Config      // Конфигурация параметров по умолчанию
-	writer   *epub.Writer // EPUB
-	setCover bool         // Флаг, что обложка уже добавлена
-	setToc   bool         // Флаг, что файл с оглавлением уже добавлен
-	cssfile  string       // Имя файла со стилем
-	lang     string       // Язык публикации
-	nav      Navigaton    // Оглавление
+	config    *Config            // Конфигурация параметров по умолчанию
+	writer    *epub.Writer       // EPUB
+	templates *template.Template // Шаблоны преобразования
+	setCover  bool               // Флаг, что обложка уже добавлена
+	setToc    bool               // Флаг, что файл с оглавлением уже добавлен
+	cssfile   string             // Имя файла со стилем
+	lang      string             // Язык публикации
+	nav       Navigaton          // Оглавление
 }
 
 // walk вызывается на каждый файл и каталог в исходных данных.
@@ -138,7 +139,7 @@ func (pub *EPUBCompiler) addMarkdown(filename string) error {
 		pub.setToc = true // Файл с заголовком добавлен
 	}
 	// Осуществляем преобразование по шаблону для формирования полноценной страницы
-	if err = templates.ExecuteTemplate(buf, templateName, meta); err != nil {
+	if err = pub.templates.ExecuteTemplate(buf, templateName, meta); err != nil {
 		return err
 	}
 	// Добавляем расширение имени файла .xhtml

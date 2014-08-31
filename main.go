@@ -63,10 +63,11 @@ func Compile(sourcePath, outputFilename string, config *Config) error {
 	writer.Metadata = pubmeta
 	// Инициализируем компилятор
 	pub := &EPUBCompiler{
-		config: config,
-		writer: writer,
-		lang:   pubmeta.Language[0].Value, // Язык публикации
-		nav:    make(Navigaton, 0),
+		config:    config,
+		writer:    writer,
+		templates: templates,
+		lang:      pubmeta.Language[0].Value, // Язык публикации
+		nav:       make(Navigaton, 0),
 	}
 	// Ищем файл со стилем
 	if _, err := os.Stat(config.CSSFile); err == nil {
@@ -99,7 +100,7 @@ func Compile(sourcePath, outputFilename string, config *Config) error {
 			tdata["_globalcssfile_"] = pub.cssfile
 		}
 		// Преобразуем по шаблону
-		if err = templates.ExecuteTemplate(fileWriter, "toc", tdata); err != nil {
+		if err = pub.templates.ExecuteTemplate(fileWriter, "toc", tdata); err != nil {
 			return err
 		}
 	}
