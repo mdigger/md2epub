@@ -22,7 +22,6 @@ var templates = template.Must(template.New("").Parse(`
 
 {{ define "toc" }}{{ template "header" . }}
 <nav epub:type="toc">
-<h1>{{ .title }}</h1>
 <ol>{{ range .toc }}
 <li><a href="{{ .Filename }}">{{ if .Title }}{{ .Title }}{{ else }}* * *{{ end }}</a></li>{{ end }}
 </ol>
@@ -31,7 +30,6 @@ var templates = template.Must(template.New("").Parse(`
 
 {{ define "nav" }}{{ template "header" . }}
 <nav epub:type="toc">
-<h1>{{ .title }}</h1>
 {{ .content }}
 </nav>
 {{ template "footer" }}{{ end }}`))

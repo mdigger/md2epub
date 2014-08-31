@@ -131,12 +131,16 @@ func (pub *EPUBCompiler) addMarkdown(filename string) error {
 	buf.Reset() // Сбрасываем буфер
 	// Избавляемся от расширения файла
 	filename = filename[:len(filename)-len(filepath.Ext(filename))]
-	properties := make([]string, 0)
 	templateName := "page" // Название шаблона для преобразования
-	if filename == "toc" {
-		templateName = "nav"
-		properties = append(properties, "nav")
-		pub.setToc = true // Файл с заголовком добавлен
+	properties := meta.GetQuickList("properties")
+	for i, property := range properties {
+		switch property {
+		case "nav":
+			templateName = "nav"
+			pub.setToc = true // Файл с заголовком добавлен
+		case "cover-image":
+			properties[i] = "cover" // Смухлюем и поправим недопустимое
+		}
 	}
 	// Осуществляем преобразование по шаблону для формирования полноценной страницы
 	if err = pub.templates.ExecuteTemplate(buf, templateName, meta); err != nil {
