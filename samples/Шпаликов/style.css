@@ -1,0 +1,65 @@
+h1, h2, h3, h4 {
+	text-align: center;
+	page-break-after: avoid !important;
+	-epub-hyphens: none;
+    -webkit-hyphens: none;
+    hyphens: none;
+}
+h5 {
+	text-indent: 8em;
+	margin: 1em 0 .5em 0;
+	page-break-after: avoid !important;
+}
+p {
+	margin: 0 0 .75em 0;
+	text-indent: 0;
+	page-break-inside: avoid;
+	text-align: left;
+	-epub-hyphens: none;
+    -webkit-hyphens: none;
+    hyphens: none;
+}
+p:last-child > em {
+	font-size: .85em;
+	page-break-before: avoid;
+	text-indent: .5em;
+	display: inline-block;
+}
+p:last-child > em:before {
+	content: "— ";
+}
+blockquote {
+	font-style: italic;
+	margin: .5em 2em .75em 2em;
+	font-size: .95em;
+}
+blockquote p {
+	text-align: right;
+	margin: 0;
+}
+body.about p {
+	text-indent: 1.5em;
+	text-align: justify;
+	page-break-inside: auto;
+	margin: 0;
+	-epub-hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+}
+body.about p > img {
+	width: 100%;
+	height: auto;
+	text-align: center;
+	display: block;
+	margin: .75em 0 1em -1.5em;
+}
+body.about blockquote {
+	font-size: inherit;
+	margin: 1em 1em 1em 1.5em;
+}
+body.about blockquote p {
+	text-align: left;
+	margin: 0 0 .75em 0;
+	text-indent: 0;
+	page-break-inside: avoid;
+}
