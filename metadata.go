@@ -55,7 +55,7 @@ func loadMetadata(config *Config) (*epub.Metadata, error) {
 // convertMetadata конвертирует описание метаданных в формат метаданных публикации.
 func convertMetadata(metadata metadata.Metadata, pubmeta *epub.Metadata) {
 	// Добавляем язык
-	if lang := metadata.Lang(); lang == "" {
+	if lang := metadata.Lang(); lang != "" {
 		pubmeta.Language.Add("", lang)
 	}
 	// Добавляем заголовок
