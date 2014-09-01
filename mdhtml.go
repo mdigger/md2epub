@@ -91,7 +91,7 @@ func (_ *htmlRender) NormalText(out *bytes.Buffer, text []byte) {
 			} else {
 				out.WriteRune(c)
 			}
-		case c == '-' && len(runes) >= i+1:
+		case c == '-' && len(runes) >= i+2:
 			if runes[i+1] == '-' {
 				out.WriteString("&mdash;")
 				i += 1
