@@ -13,7 +13,7 @@ var templates = template.Must(template.New("").Parse(`
 <title>{{ .title }}</title>{{ if ._globalcssfile_ }}
 <link rel="stylesheet" href="{{ ._globalcssfile_ }}" />{{ end }}
 </head>
-<body>{{ end }}
+<body{{ if .class }} class="{{ .class }}"{{ end }}>{{ end }}
 
 {{ define "footer" }}</body>
 </html>{{ end }}
