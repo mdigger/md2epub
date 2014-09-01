@@ -4,6 +4,7 @@ import (
 	"html/template"
 )
 
+// Шаблоны, используемые для преобразования информации в публикацию.
 var templates = template.Must(template.New("").Parse(`
 {{ define "header"}}<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="{{ if .lang }}{{ .lang }}{{ else }}en{{ end }}">

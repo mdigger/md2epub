@@ -9,6 +9,7 @@ import (
 	"regexp"
 )
 
+// Флаги для преобразования из Markdown в HTML.
 var (
 	extensions = 0 |
 		blackfriday.EXTENSION_NO_INTRA_EMPHASIS |
@@ -26,32 +27,42 @@ var (
 		blackfriday.HTML_USE_XHTML
 )
 
+// Markdown преобразует данные из формата Markdown в HTML.
 func Markdown(data []byte) []byte {
 	return blackfriday.Markdown(data, &htmlRender{
 		Renderer: blackfriday.HtmlRenderer(htmlFlags, "", ""),
 	}, extensions)
 }
 
+// htmlRender переопределяет преобразование некоторых видов информации из Markdwon
+// в HTML. В тех случаях, когда переопределение не требуется, используется стандартный
+// конвертер Markdown.
 type htmlRender struct {
 	blackfriday.Renderer
 }
 
+// FootnoteRef обрабатывает ссылки на сноски.
 func (_ *htmlRender) FootnoteRef(out *bytes.Buffer, ref []byte, id int) {
 	fmt.Fprintf(out, "<sup><a rel=\"footnote\" href=\"#fn:%s\" epub:type=\"noteref\">%d</a></sup>",
 		hashSlug(ref), id)
 }
 
+// Footnotes обрабатывает сноски.
 func (_ *htmlRender) Footnotes(out *bytes.Buffer, text func() bool) {
 	text()
 }
 
+// Поиск строк состоящих только из символов новой строки.
 var reMultilines = regexp.MustCompile(`\n{2,}`)
 
+// FootnoteItem обрабатывает содержимое сноски.
 func (_ *htmlRender) FootnoteItem(out *bytes.Buffer, name, text []byte, flags int) {
 	fmt.Fprintf(out, "\n<aside id=\"fn:%s\" epub:type=\"footnote\">\n%s</aside>\n",
 		hashSlug(name), reMultilines.ReplaceAllLiteral(text, []byte("\n")))
 }
 
+// NormalText выводит обычный текст. В данном случае, он предварительно обрабатывается
+// и в нем происходят типографские замены.
 func (_ *htmlRender) NormalText(out *bytes.Buffer, text []byte) {
 	text = reMultilines.ReplaceAllLiteral(text, []byte("\n")) // Убираем пустые строки
 	text = []byte(html.EscapeString(string(text)))
@@ -92,27 +103,6 @@ func (_ *htmlRender) NormalText(out *bytes.Buffer, text []byte) {
 		}
 
 	}
-
-	// TODO: Smartypants
-	// mark := 0
-	// for i := 0; i < len(text); i++ {
-	// 	if action := options.smartypants[text[i]]; action != nil {
-	// 		if i > mark {
-	// 			out.Write(text[mark:i])
-	// 		}
-
-	// 		previousChar := byte(0)
-	// 		if i > 0 {
-	// 			previousChar = text[i-1]
-	// 		}
-	// 		i += action(out, &smrt, previousChar, text[i:])
-	// 		mark = i + 1
-	// 	}
-	// }
-
-	// if mark < len(text) {
-	// 	out.Write(text[mark:])
-	// }
 }
 
 // Словарь для генерации уникальных идентификаторов.
