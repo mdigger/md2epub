@@ -5,13 +5,16 @@ h1, h2, h3, h4 {
     -webkit-hyphens: none;
     hyphens: none;
 }
+h1, h2 {
+	margin: .25rem 1rem .75rem;
+}
 h5 {
-	text-indent: 8em;
-	margin: 1em 0 .5em 0;
+	text-indent: 8rem;
+	margin: 1rem 0 .5rem 0;
 	page-break-after: avoid !important;
 }
 p {
-	margin: 0 0 .75em 0;
+	margin: .70rem 0;
 	text-indent: 0;
 	page-break-inside: avoid;
 	text-align: left;
@@ -19,19 +22,19 @@ p {
     -webkit-hyphens: none;
     hyphens: none;
 }
-p:last-child > em {
 	font-size: .85em;
 	page-break-before: avoid;
-	text-indent: .5em;
-	display: inline-block;
+	font-size: .85rem;
+	page-break-before: avoid !important;
 }
-p:last-child > em:before {
 	content: "— ";
 }
 blockquote {
 	font-style: italic;
 	margin: .5em 2em .75em 2em;
 	font-size: .95em;
+	margin: -.25rem 2rem .5rem 2rem;
+	font-size: .95rem;
 }
 blockquote p {
 	text-align: right;
@@ -39,6 +42,7 @@ blockquote p {
 }
 body.about p {
 	text-indent: 1.5em;
+	text-indent: 1.5rem;
 	text-align: justify;
 	page-break-inside: auto;
 	margin: 0;
@@ -52,14 +56,17 @@ body.about p > img {
 	text-align: center;
 	display: block;
 	margin: .75em 0 1em -1.5em;
+	margin: .75rem 0 1rem -1.5rem;
 }
 body.about blockquote {
 	font-size: inherit;
 	margin: 1em 1em 1em 1.5em;
+	margin: 1rem 1rem 1rem 1.5rem;
 }
 body.about blockquote p {
 	text-align: left;
 	margin: 0 0 .75em 0;
+	margin: 0 0 .75rem 0;
 	text-indent: 0;
 	page-break-inside: avoid;
 }
