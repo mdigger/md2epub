@@ -2,11 +2,12 @@ package main
 
 import (
 	"bytes"
-	"code.google.com/p/go.net/html"
 	"fmt"
-	"github.com/russross/blackfriday"
 	"hash/crc64"
 	"regexp"
+
+	"github.com/russross/blackfriday"
+	"golang.org/x/net/html"
 )
 
 // Флаги для преобразования из Markdown в HTML.

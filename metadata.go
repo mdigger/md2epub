@@ -1,13 +1,14 @@
 package main
 
 import (
-	"code.google.com/p/go-uuid/uuid"
-	"github.com/mdigger/epub3"
-	"github.com/mdigger/metadata"
-	"gopkg.in/yaml.v1"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/mdigger/epub3"
+	"github.com/mdigger/metadata"
+	"github.com/pborman/uuid"
+	"gopkg.in/yaml.v2"
 )
 
 // loadMetadata загружает или создает описание публикации.

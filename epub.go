@@ -2,16 +2,17 @@ package main
 
 import (
 	"bytes"
-	"code.google.com/p/go.net/html"
 	"encoding/xml"
-	"github.com/mdigger/bpool"
-	"github.com/mdigger/epub3"
-	"github.com/mdigger/metadata"
 	"html/template"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"github.com/mdigger/bpool"
+	"github.com/mdigger/epub3"
+	"github.com/mdigger/metadata"
+	"golang.org/x/net/html"
 )
 
 func Compile(sourcePath, outputFilename string, config *Config) error {
