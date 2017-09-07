@@ -1,3 +1,4 @@
+@namespace epub 'http://www.idpf.org/2007/ops';
 h1, h2, h3, h4 {
 	text-align: center;
 	page-break-after: avoid !important;
@@ -40,6 +41,12 @@ blockquote {
 blockquote p {
 	text-align: right;
 	margin: 0;
+}
+aside p {
+	text-align: left;
+	-epub-hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphens: auto;	
 }
 body.about p {
 	text-indent: 1.5em;
