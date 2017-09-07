@@ -1,0 +1,52 @@
+p { 
+	margin: 0;
+	text-indent: 1.5em;
+}
+h1, h2, h3, h4, h5, h6 { 
+	-epub-hyphens: none;
+	-webkit-hyphens: none;
+	hyphens: none;
+}
+h1, h2 {
+	text-align: center;
+	line-height: 1;
+}
+blockquote {
+	border-left: solid;
+	margin: 1rem 0 1rem 0;
+	padding-left: 1rem;
+	font-family: monospace;	
+}
+blockquote > p {
+	text-indent: 0;
+	text-align: left;
+}
+blockquote > ul {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+}
+blockquote > ul > li{
+	text-align: left;
+}
+blockquote > ul > li::before {
+	content: "- ";
+}
+
+
+h1+blockquote, 
+h2+blockquote, 
+h3+blockquote {
+	font-family: inherit;
+	border-left: none;
+	font-style: italic;
+	margin: 1rem .5rem 2.5rem 3rem;
+	padding-left: 0;
+}
+
+h1+blockquote > p, 
+h2+blockquote > p, 
+h3+blockquote > p {
+	text-indent: 0;
+	text-align: right;
+}
