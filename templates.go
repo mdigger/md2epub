@@ -18,13 +18,12 @@ var templates = template.Must(template.New("").Parse(`
 {{ define "footer" }}</body>
 </html>{{ end }}
 
-{{ define "page" }}{{ template "header" . }}
-{{ .content }}{{ template "footer" }}{{ end }}
+{{ define "page" }}{{ template "header" . }}{{ .content }}{{ template "footer" }}{{ end }}
 
 {{ define "toc" }}{{ template "header" . }}
 <nav epub:type="toc">
 <ol>{{ range .toc }}
-<li><a href="{{ .Filename }}">{{ if .Title }}{{ .Title }}{{ else }}* * *{{ end }}</a></li>{{ end }}
+	<li><a href="{{ .Filename }}">{{ if .Title }}{{ .Title }}{{ else }}* * *{{ end }}</a></li>{{ end }}
 </ol>
 </nav>
 {{ template "footer" }}{{ end }}

@@ -7,14 +7,14 @@ import (
 
 	"github.com/mdigger/epub3"
 	"github.com/mdigger/metadata"
-	"github.com/pborman/uuid"
+	"github.com/mdigger/uuid"
 	"gopkg.in/yaml.v2"
 )
 
 // loadMetadata загружает или создает описание публикации.
 func loadMetadata(config *Config) (*epub.Metadata, error) {
 	// Инициализируем описание метаданных
-	pubmeta := &epub.Metadata{
+	var pubmeta = &epub.Metadata{
 		DC:   "http://purl.org/dc/elements/1.1/",
 		Meta: make([]*epub.Meta, 0),
 	}
@@ -30,7 +30,7 @@ func loadMetadata(config *Config) (*epub.Metadata, error) {
 			return nil, err
 		}
 		// Разбираем метаданные
-		metadata := make(metadata.Metadata)
+		var metadata = make(metadata.Metadata)
 		if err := yaml.Unmarshal(data, metadata); err != nil {
 			return nil, err
 		}
@@ -48,7 +48,7 @@ func loadMetadata(config *Config) (*epub.Metadata, error) {
 	}
 	// Добавляем уникальный идентификатор, если его нет
 	if len(pubmeta.Identifier) == 0 {
-		pubmeta.Identifier.Add("uuid", "urn:uuid:"+uuid.New())
+		pubmeta.Identifier.Add("uuid", "urn:uuid:"+uuid.New().String())
 	}
 	return pubmeta, nil
 }

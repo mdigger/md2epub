@@ -4,25 +4,29 @@ import (
 	"bytes"
 	"encoding/xml"
 	"html/template"
-	"io"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sync"
 
-	"github.com/mdigger/bpool"
 	"github.com/mdigger/epub3"
 	"github.com/mdigger/metadata"
 	"golang.org/x/net/html"
 )
 
+// buffers используется как пул буферов для формирования новых команд,
+// отправляемых на сервер.
+var buffers = sync.Pool{New: func() interface{} { return new(bytes.Buffer) }}
+
+// Compile компилирует каталог с файлами в формат epaub3.
 func Compile(sourcePath, outputFilename string, config *Config) error {
-	// Делаем исходный каталог текущим, чтобы не вычислять относительный путь. По окончании
-	// обработки восстанавливаем исходный каталог обратно.
+	// Делаем исходный каталог текущим, чтобы не вычислять относительный путь.
+	// По окончании обработки восстанавливаем исходный каталог обратно.
 	currentPath, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	if err := os.Chdir(sourcePath); err != nil {
+	if err = os.Chdir(sourcePath); err != nil {
 		return err
 	}
 	defer os.Chdir(currentPath)
@@ -39,7 +43,7 @@ func Compile(sourcePath, outputFilename string, config *Config) error {
 	defer writer.Close()
 	writer.Metadata = pubmeta
 	// Инициализируем компилятор
-	pub := &EPUBCompiler{
+	var pub = &EPUBCompiler{
 		config:    config,
 		writer:    writer,
 		templates: templates,
@@ -47,26 +51,21 @@ func Compile(sourcePath, outputFilename string, config *Config) error {
 		nav:       make(Navigaton, 0),
 	}
 	// Ищем файл со стилем
-	if _, err := os.Stat(config.CSSFile); err == nil {
+	if _, err = os.Stat(config.CSSFile); err == nil {
 		pub.cssfile = config.CSSFile
 	}
 	// Перебираем все файлы и подкаталоги в исходном каталоге
-	if err := filepath.Walk(".", pub.walk); err != nil {
+	if err = filepath.Walk(".", pub.walk); err != nil {
 		return err
 	}
 	// Генерируем оглавление, если его не добавили в виде файла
 	if !pub.setToc {
-		// Добавляем оглавление как скрытый (вспомогательный) файл
-		fileWriter, err := writer.Add("_toc.xhtml", epub.ContentTypeAuxiliary, "nav")
-		if err != nil {
-			return err
-		}
-		// Добавляем в начало документа XML-заголовок
-		if _, err := io.WriteString(fileWriter, xml.Header); err != nil {
-			return err
-		}
+		var buf = buffers.Get().(*bytes.Buffer)
+		buf.Reset()
+		defer buffers.Put(buf)
+		buf.WriteString(xml.Header) // добавляем XML-заголовок
 		// Преобразуем по шаблону и записываем в публикацию.
-		tdata := metadata.Metadata{
+		var tdata = metadata.Metadata{
 			"lang":  pub.lang,
 			"title": "Оглавление",
 			"toc":   pub.nav,
@@ -77,13 +76,16 @@ func Compile(sourcePath, outputFilename string, config *Config) error {
 			tdata["_globalcssfile_"] = pub.cssfile
 		}
 		// Преобразуем по шаблону
-		if err = pub.templates.ExecuteTemplate(fileWriter, "toc", tdata); err != nil {
+		if err = pub.templates.ExecuteTemplate(buf, "toc", tdata); err != nil {
 			return err
 		}
+		// Добавляем оглавление как скрытый (вспомогательный) файл
+		return writer.Add("_toc.xhtml", epub.CTAuxiliary, buf, "nav")
 	}
 	return nil
 }
 
+// EPUBCompiler описывает комнилятор в формат epub3.
 type EPUBCompiler struct {
 	config    *Config            // Конфигурация параметров по умолчанию
 	writer    *epub.Writer       // EPUB
@@ -136,13 +138,13 @@ func (pub *EPUBCompiler) addMarkdown(filename string) error {
 		return err
 	}
 	// Определяем язык файла
-	lang := meta.Lang()
+	var lang = meta.Lang()
 	if lang == "" {
 		lang = pub.lang
 	}
 	meta["lang"] = lang
 	// Вытаскиваем заголовок
-	title := meta.Title()
+	var title = meta.Title()
 	if title == "" {
 		title = "* * *"
 	}
@@ -150,9 +152,9 @@ func (pub *EPUBCompiler) addMarkdown(filename string) error {
 	// Вычисляем, основной это текст или скрытый
 	var ct epub.ContentType
 	if meta.GetBool("hidden") {
-		ct = epub.ContentTypeAuxiliary
+		ct = epub.CTAuxiliary
 	} else {
-		ct = epub.ContentTypePrimary
+		ct = epub.CTPrimary
 	}
 	// Добавляем глобальный стилевой файл публикации
 	if pub.cssfile != "" {
@@ -170,8 +172,9 @@ func (pub *EPUBCompiler) addMarkdown(filename string) error {
 		return err
 	}
 	// Инициализируем внутренний пул для работы с информацией
-	buf := bpool.Get()
-	defer bpool.Put(buf)
+	var buf = buffers.Get().(*bytes.Buffer)
+	buf.Reset()
+	defer buffers.Put(buf)
 	// Избавляемся от пустых строк между тегами и воссоздаем нормализованный XHTML
 	for _, node := range nodes {
 		if node.Type == html.TextNode && reMultiNewLines.MatchString(node.Data) {
@@ -185,11 +188,12 @@ func (pub *EPUBCompiler) addMarkdown(filename string) error {
 	}
 	// Сохраняем получившийся HTML в том же самом описании метаданных, чтобы не плодить сущности
 	meta["content"] = template.HTML(buf.String())
-	buf.Reset() // Сбрасываем буфер
+	buf.Reset()                 // Сбрасываем буфер
+	buf.WriteString(xml.Header) // добавляем XML-заголовок
 	// Избавляемся от расширения файла
 	filename = filename[:len(filename)-len(filepath.Ext(filename))]
-	templateName := "page" // Название шаблона для преобразования
-	properties := meta.GetQuickList("properties")
+	var templateName = "page" // Название шаблона для преобразования
+	var properties = meta.GetQuickList("properties")
 	for i, property := range properties {
 		switch property {
 		case "nav":
@@ -213,18 +217,8 @@ func (pub *EPUBCompiler) addMarkdown(filename string) error {
 		Level:       meta.GetInt("level"),
 		ContentType: ct,
 	})
-	// Получаем io.Writer для записи содержимого файла
-	fileWriter, err := pub.writer.Add(filename, ct, properties...)
-	if err != nil {
-		return err
-	}
-	// Добавляем в начало документа XML-заголовок
-	if _, err := io.WriteString(fileWriter, xml.Header); err != nil {
-		return err
-	}
-	// Записываем данные
-	_, err = buf.WriteTo(fileWriter)
-	return err
+	// записываем содержимое файла
+	return pub.writer.Add(filename, ct, buf, properties...)
 }
 
 func (pub *EPUBCompiler) addMedia(filename string) error {
@@ -236,7 +230,7 @@ func (pub *EPUBCompiler) addMedia(filename string) error {
 		pub.setCover = true // Обрабатываем только одну обложку
 	}
 	// Добавляем файл в публикацию
-	return pub.writer.AddFile(filename, filename, epub.ContentTypeMedia, properties...)
+	return pub.writer.AddFile(filename, filename, epub.CTMedia, properties...)
 }
 
 // NavigationItem описывает ссылку из оглавления на файл

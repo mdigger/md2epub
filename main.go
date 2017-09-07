@@ -14,7 +14,7 @@ func main() {
 		os.Exit(1)
 	}
 	// Путь к каталогу с исходниками публикации
-	sourcePath := flag.Arg(0)
+	var sourcePath = flag.Arg(0)
 	var outputFilename string // Имя результирующего файла с публикацией
 	if flag.NArg() > 1 {
 		outputFilename = flag.Arg(1)

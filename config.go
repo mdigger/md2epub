@@ -1,5 +1,6 @@
 package main
 
+// Config описывает конфигурацию для публикации.
 type Config struct {
 	Lang     string   // Язык публикации по умолчанию
 	Title    string   // Название публикации по умолчанию
@@ -9,6 +10,7 @@ type Config struct {
 	CSSFile  string   // Имя файла со стилем
 }
 
+// DefaultConfig описывает используемую по умолчанию конфигурацию.
 var DefaultConfig = &Config{
 	Lang:     "en",
 	Title:    "Untitle",
