@@ -1,4 +1,4 @@
-SOURCE = samples/zultys
+SOURCE = samples/Шпаликов
 NAME = md2epub
 OUT = out
 
