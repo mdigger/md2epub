@@ -1,58 +1,63 @@
 p { 
 	margin: 0;
 	text-indent: 1.5em;
+	text-align: justify;
 }
-h1, h2, h3, h4, h5, h6 { 
+h1, h2, h3, h4 { 
 	-epub-hyphens: none;
 	-webkit-hyphens: none;
 	hyphens: none;
-}
-h1, h2 {
 	text-align: center;
 	line-height: 1;
 }
 blockquote {
-	border-left: solid;
-	margin: 1rem 0 1rem 0;
-	padding-left: 1rem;
-	font-family: monospace;
-}
-h1+blockquote, 
-h2+blockquote, 
-h3+blockquote {
-	font-family: inherit;
-	border-left: none;
 	font-style: italic;
 	font-size: .95rem;
 	margin: 1rem .5rem 2.5rem 5rem;
-	padding-left: 0;
-	line-height: 1.33;
 }
 blockquote > p {
 	text-indent: 0;
-	text-align: left;
-	white-space: pre-line;
 }
-h1+blockquote > p, 
-h2+blockquote > p, 
-h3+blockquote > p {
-	white-space: normal;
-}
-h1+blockquote > p > strong, 
-h2+blockquote > p > strong, 
-h3+blockquote > p > strong {
+blockquote > p > strong {
 	display: block;
 	margin: .25rem 0 1.5rem 1rem;
 	text-align: right;
+	font-size: .9rem;
 }
-blockquote > ul {
-	margin: 0;
-	padding: 0;
-	list-style-type: none;
+body > ul {
+	font-family: monospace;
+	margin: 1rem 0;
+	padding-left: .75rem;
+	border-left: solid;
 }
-blockquote > ul > li{
+body > ul > li {
+	list-style: none;
 	text-align: left;
 }
-blockquote > ul > li::before {
-	content: "- ";
+body > ul > li > ul {
+	padding-left: .33rem;
+	list-style-position: inside;
+	list-style-type: square;
+}
+hr {
+	margin: 0 auto;
+	width: 5rem;
+}
+section.endnotes {
+	page-break-before: always;
+	font-size: .85rem;
+	margin-top: 5rem;
+}
+section.endnotes ol {
+	margin: 0;
+	padding: .5rem 0;
+}
+section.endnotes li {
+	list-style-position: inside;
+	text-align: justify;
+	margin: .5rem 0;
+}
+section.endnotes li p {
+	text-indent: 0;
+	margin: .33rem 0;
 }
