@@ -50,23 +50,23 @@ func (r *htmlRender) RenderNode(w io.Writer, node *blackfriday.Node, entering bo
 		return blackfriday.GoToNext
 	case blackfriday.List:
 		if node.IsFootnotesList {
-			// if entering {
-			// 	io.WriteString(w, "\n<section epub:type=\"endnotes\">\n<hr/>\n<ol>\n")
-			// } else {
-			// 	io.WriteString(w, "</ol>\n</section>")
-			// }
+			if entering {
+				io.WriteString(w, "\n<section class=\"endnotes\" epub:type=\"endnotes\">\n<hr/>\n<ol>\n")
+			} else {
+				io.WriteString(w, "</ol>\n</section>")
+			}
 			return blackfriday.GoToNext
 		}
 	case blackfriday.Item:
 		if node.ListData.RefLink != nil {
 			if entering {
-				fmt.Fprintf(w, "<aside id=\"fn:%s\" epub:type=\"footnote\">",
+				fmt.Fprintf(w, "<li id=\"fn:%s\" epub:type=\"footnote\">",
 					slug(node.ListData.RefLink))
 			} else {
 				fmt.Fprintf(w,
 					" <a href=\"#fnref:%s\" class=\"reversefootnote\" hidden=\"hidden\">&#8617;</a>",
 					slug(node.ListData.RefLink))
-				io.WriteString(w, "</aside>\n")
+				io.WriteString(w, "</li>\n")
 			}
 			return blackfriday.GoToNext
 		}
