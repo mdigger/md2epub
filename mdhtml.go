@@ -10,8 +10,8 @@ import (
 )
 
 var extensions = blackfriday.WithExtensions(blackfriday.Footnotes |
-	blackfriday.CommonExtensions |
-	blackfriday.NoEmptyLineBeforeBlock)
+	blackfriday.CommonExtensions) /* |
+blackfriday.NoEmptyLineBeforeBlock)*/
 var render = blackfriday.WithRenderer(&htmlRender{
 	blackfriday.NewHTMLRenderer(
 		blackfriday.HTMLRendererParameters{
