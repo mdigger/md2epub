@@ -24,14 +24,19 @@ blockquote > p > strong {
 	text-align: right;
 	font-size: .9rem;
 }
-body > ul {
+body > ul, body > ol {
 	font-family: monospace;
 	margin: 1rem 0;
 	padding: .5rem 0;
 	border-style: solid none;
 	border-color: #888A; 
 	border-width: thin;
-	font-size: 1rem;
+	font-size: 1.1rem;
+	text-align: left;
+}
+body > ol > li {
+	list-style-position: inside;
+	text-align: left;
 }
 body > ul > li {
 	list-style: none;
