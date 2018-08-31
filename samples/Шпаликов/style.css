@@ -25,7 +25,6 @@ p {
 }
 p:last-of-type > em {
 	font-size: .85em;
-	font-size: .85rem;
 	/*page-break-before: avoid !important;*/
 }
 p:last-of-type > em::before {
