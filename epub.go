@@ -80,7 +80,7 @@ func Compile(sourcePath, outputFilename string, config *Config) error {
 			return err
 		}
 		// Добавляем оглавление как скрытый (вспомогательный) файл
-		return writer.Add("_toc.xhtml", epub.CTAuxiliary, buf, "nav")
+		return writer.Add("_toc.xhtml", epub.Auxiliary, buf, "nav")
 	}
 	return nil
 }
@@ -152,9 +152,9 @@ func (pub *EPUBCompiler) addMarkdown(filename string) error {
 	// Вычисляем, основной это текст или скрытый
 	var ct epub.ContentType
 	if meta.GetBool("hidden") {
-		ct = epub.CTAuxiliary
+		ct = epub.Auxiliary
 	} else {
-		ct = epub.CTPrimary
+		ct = epub.Primary
 	}
 	// Добавляем глобальный стилевой файл публикации
 	if pub.cssfile != "" {
@@ -230,7 +230,7 @@ func (pub *EPUBCompiler) addMedia(filename string) error {
 		pub.setCover = true // Обрабатываем только одну обложку
 	}
 	// Добавляем файл в публикацию
-	return pub.writer.AddFile(filename, filename, epub.CTMedia, properties...)
+	return pub.writer.AddFile(filename, filename, epub.Media, properties...)
 }
 
 // NavigationItem описывает ссылку из оглавления на файл

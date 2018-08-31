@@ -7,7 +7,6 @@ import (
 
 	"github.com/mdigger/epub3"
 	"github.com/mdigger/metadata"
-	"github.com/mdigger/uuid"
 	"gopkg.in/yaml.v2"
 )
 
@@ -48,7 +47,7 @@ func loadMetadata(config *Config) (*epub.Metadata, error) {
 	}
 	// Добавляем уникальный идентификатор, если его нет
 	if len(pubmeta.Identifier) == 0 {
-		pubmeta.Identifier.Add("uuid", "urn:uuid:"+uuid.New().String())
+		pubmeta.Identifier.Add("uuid", "urn:uuid:"+epub.NewUUID())
 	}
 	return pubmeta, nil
 }

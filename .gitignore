@@ -1,3 +1,4 @@
 *.epub
 md2epub
 out
+.DS_Store
